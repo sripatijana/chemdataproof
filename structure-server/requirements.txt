@@ -1,0 +1,11 @@
+# CPU-only PyTorch (MolScribe needs torch < 2.0, hence Python 3.10)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==1.13.1
+numpy<2
+MolScribe==1.1.1
+huggingface_hub>=0.20
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
+pillow>=10
+py2opsin>=1.2

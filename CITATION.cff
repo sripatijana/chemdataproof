@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use ChemDataProof, please cite it as below."
+title: "ChemDataProof: proofreading for reported chemical characterisation data"
+version: 0.3.1
+date-released: 2026-11-06
+license: MIT
+authors:
+  - family-names: Jana
+    given-names: Sripati
+    orcid: "https://orcid.org/0000-0001-7155-8384"
+repository-code: "https://github.com/sripatijana/chemdataproof"
+keywords: [chemistry, NMR, HRMS, supporting information, RDKit]

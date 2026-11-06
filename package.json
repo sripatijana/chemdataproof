@@ -1,0 +1,24 @@
+{
+  "name": "chemdataproof",
+  "version": "0.3.1",
+  "description": "Proofreading for reported chemical characterisation data: NMR and HRMS consistency checks",
+  "main": "js/core/index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "author": "Sripati Jana",
+  "license": "MIT",
+  "devDependencies": {
+    "@rdkit/rdkit": "^2026.9.2",
+    "mammoth": "^1.13.0"
+  },
+  "type": "module",
+  "keywords": [
+    "chemistry",
+    "nmr",
+    "hrms",
+    "supporting-information",
+    "rdkit",
+    "cheminformatics"
+  ]
+}
