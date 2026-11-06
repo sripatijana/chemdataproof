@@ -72,7 +72,7 @@ test('correct data gives no errors or warnings', () => {
 
 test('missing OH is reported as info, not error', () => {
   const r = runChecks({ text: GOOD.replace('1.91 (br s, 1H), ', ''), smiles: SMI }, RDKit);
-  assert.ok(has(r, 'info', /could be OH\/NH/));
+  assert.ok(has(r, 'info', /missing H can be the alcohol OH/));
   assert.ok(!levels(r, '1H NMR').includes('error'));
 });
 
@@ -134,7 +134,7 @@ IR (ATR): 2940, 1705, 1450 cm⁻¹.`;
   assert.match(errs[0].title, /should be \[M-H\]-/);
   assert.ok(has(r, 'ok', /8 peaks reported, matching 8/));
   assert.ok(has(r, 'ok', /within 5 ppm/));
-  assert.ok(has(r, 'info', /could be OH/));
+  assert.ok(has(r, 'info', /can be the carboxylic acid OH/));
 });
 
 test('name vs structure comparison', () => {
@@ -177,4 +177,31 @@ test('heading without data is reported clearly', () => {
   const r = runChecks({ text: 'Compound (8e)\n1H NMR (400 MHz, CDCl3)\n13C NMR (101 MHz, CDCl3)' }, null);
   assert.ok(has(r, 'warning', /¹H NMR heading has no data/));
   assert.ok(has(r, 'warning', /¹³C NMR heading has no data/));
+});
+
+test('exchangeable protons depend on group and solvent', () => {
+  const acid = 'OC(=O)CCc1ccccc1';               // C9H10O2, COOH
+  const H = '7.31-7.18 (m, 5H), 2.97 (t, J = 7.8 Hz, 2H), 2.69 (t, J = 7.8 Hz, 2H)';
+  // CDCl3: COOH often missing -> note only
+  let r = runChecks({ text: `1H NMR (400 MHz, CDCl3) δ ${H}.`, smiles: acid }, RDKit);
+  assert.ok(has(r, 'info', /missing H can be the carboxylic acid OH/), JSON.stringify(r.findings));
+  assert.ok(!r.findings.some(f => f.level === 'error' || f.level === 'warning'));
+  // DMSO-d6: COOH normally seen -> please check
+  r = runChecks({ text: `1H NMR (400 MHz, DMSO-d6) δ ${H}.`, smiles: acid }, RDKit);
+  assert.ok(has(r, 'warning', /carboxylic acid OH \(1H\) is usually visible in DMSO-d₆/), JSON.stringify(r.findings));
+  // CD3OD: exchanged -> expected
+  r = runChecks({ text: `1H NMR (400 MHz, CD3OD) δ ${H}.`, smiles: acid }, RDKit);
+  assert.ok(has(r, 'info', /exchangeable carboxylic acid OH/));
+  // CD3OD but the OH was counted -> suspicious
+  r = runChecks({ text: `1H NMR (400 MHz, CD3OD) δ 11.50 (br s, 1H), ${H}.`, smiles: acid }, RDKit);
+  assert.ok(has(r, 'warning', /exchangeable H, but the solvent is CD₃OD/));
+  // amide NH in CDCl3 is usually visible
+  r = runChecks({ text: '1H NMR (400 MHz, CDCl3) δ 7.52 (d, J = 7.9 Hz, 2H), 7.31 (t, J = 7.9 Hz, 2H), 7.10 (t, J = 7.4 Hz, 1H), 2.17 (s, 3H).', smiles: 'CC(=O)Nc1ccccc1' }, RDKit);
+  assert.ok(has(r, 'warning', /amide\/carbamate NH \(1H\) is usually visible/), JSON.stringify(r.findings));
+  // aliphatic amine NH2 in CDCl3 often missing
+  r = runChecks({ text: '1H NMR (400 MHz, CDCl3) δ 7.35-7.20 (m, 5H), 3.86 (s, 2H).', smiles: 'NCc1ccccc1' }, RDKit);
+  assert.ok(has(r, 'info', /amine NH \(2H\)/), JSON.stringify(r.findings));
+  // more missing than exchangeable -> error that says C–H are unaccounted
+  r = runChecks({ text: '1H NMR (400 MHz, CDCl3) δ 7.35-7.20 (m, 5H).', smiles: 'NCc1ccccc1' }, RDKit);
+  assert.ok(has(r, 'error', /C–H protons are unaccounted/), JSON.stringify(r.findings));
 });

@@ -29,7 +29,7 @@ If the name and the drawing disagree (different compound, or R vs S), you are to
 
 | Section | Check | Level |
 |---|---|---|
-| ¹H NMR | Integrations add up to the H count of the formula (with an allowance for unobserved OH/NH/SH) | error / note |
+| ¹H NMR | Integrations add up to the H count of the formula, aware of exchangeable protons and the solvent (see below) | error / warning / note |
 | ¹H NMR | Multiplicity matches the number of J values (`d` without J, `s` with J, `dd` with one J, …) | error / warning |
 | ¹H NMR | Every J value has a partner signal within ±0.3 Hz (adjustable) | note |
 | ¹H NMR | Descending order, 2-decimal shifts, 1-decimal J values, plausible range | note |
@@ -46,6 +46,22 @@ If the name and the drawing disagree (different compound, or R vs S), you are to
 | Structure | Structure recognised from an image has not been confirmed | warning |
 
 Salts are handled: for an azolium tetrafluoroborate, `[M]+` is matched against the cation.
+
+## Exchangeable protons and solvents
+
+OH, NH and SH protons often don't show up, but whether that's normal depends on the group *and* the solvent. ChemDataProof finds the exchangeable groups in the structure (carboxylic acid, boronic acid, phenol, oxime, alcohol, amide/carbamate, sulfonamide, indole/azole NH, ammonium, aniline, amine, thiol) and uses a table of their typical behaviour ([`js/core/exchangeable.js`](js/core/exchangeable.js)):
+
+| Solvent class | Examples | Exchangeable protons |
+|---|---|---|
+| aprotic, weakly H-bonding | CDCl₃, CD₂Cl₂, C₆D₆ | COOH, B(OH)₂ and amine NH are *often missing*; alcohol/phenol OH *variable*; amide, sulfonamide and indole NH *usually seen* |
+| aprotic, H-bond accepting | DMSO-d₆, acetone-d₆, CD₃CN | *usually seen*, sharper and further downfield |
+| protic / deuterated | CD₃OD, D₂O | *exchanged with deuterium*, not observed |
+
+So in CDCl₃ a missing COOH proton is just a note. In DMSO-d₆ it's a "please check" (with the expected shift range). Integrating an OH in CD₃OD is flagged as suspicious. If more protons are missing than the structure has exchangeable ones, it's an error.
+
+## Abbreviations in compound names
+
+OPSIN reads systematic names and many protecting-group words (Boc, Cbz, Fmoc, tosyl, triflate, TMS, "TFA salt"). Names that use formula-style abbreviations, such as `2-naphthyl-OTf`, `4-OMe-benzaldehyde`, `4-Cl-3-CF3-benzoic acid`, `N-Ts-aniline`, `4-Bpin-anisole`, `amine · TFA` or `pyridinium OTf`, are retried after expanding them with the dictionary in [`js/core/abbrev.js`](js/core/abbrev.js) (about 100 substituents, protecting groups, anions and salts). Whenever that happens, the report shows how the name was read, so you can confirm it's the intended compound.
 
 ## What it does *not* do
 
