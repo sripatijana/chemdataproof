@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import mammoth from 'mammoth';
-import { splitEntries, cleanTitle } from '../js/core/document.js';
+import JSZip from 'jszip';
+import { DOMParser } from '@xmldom/xmldom';
+import { readDocx } from '../js/core/docx.js';
+import { splitEntries, splitParagraphs, cleanTitle } from '../js/core/document.js';
 
 test('title cleaning', () => {
   assert.deepEqual(cleanTitle('4-Phenylbutan-2-one (1a)'), { name: '4-Phenylbutan-2-one', label: '1a' });
@@ -12,8 +14,8 @@ test('title cleaning', () => {
 });
 
 test('a Word file is split into one entry per compound', async () => {
-  const { value } = await mammoth.extractRawText({ buffer: readFileSync(new URL('./fixtures/example-si.docx', import.meta.url)) });
-  const e = splitEntries(value);
+  const ctx = await readDocx(readFileSync(new URL('./fixtures/example-si.docx', import.meta.url)), { JSZip, DOMParser });
+  const e = splitParagraphs(ctx.paragraphs);
   assert.deepEqual(e.map(x => x.label), ['1a', '1b', '1c', '1d']);
   assert.equal(e[2].name, 'Ethyl 3-(4-fluorophenyl)propanoate');
   assert.match(e[2].text, /19F NMR/);

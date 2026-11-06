@@ -17,7 +17,7 @@ The structure can come from three sources, and ChemDataProof cross-checks them:
 
 If the name and the drawing disagree (different compound, or R vs S), you are told.
 
-**Whole SI files:** upload your Word file (.docx) and ChemDataProof splits the characterisation part into compounds, gets each structure from its name, checks every entry, and gives one report table. You can download it as CSV or as a printable HTML report.
+**Whole SI files:** upload your Word file (.docx) and ChemDataProof splits the characterisation part into compounds, gets each structure from its name and checks every entry. You get **your own Word file back with margin comments** on each problem ("Please correct", "Please check", "Minor"), attached to the exact text, plus a report table you can download as CSV or HTML.
 
 ![batch mode](docs/batch-screenshot.png)
 
@@ -72,13 +72,19 @@ If something in your style is not recognised, please [open an issue](https://git
 
 ## Whole SI file mode
 
-The **Whole SI file (.docx)** tab reads a Word document in the browser (with [mammoth.js](https://github.com/mwilliamson/mammoth.js)) and splits it into entries:
+The **Whole SI file (.docx)** tab reads a Word document in the browser (its XML, via [JSZip](https://stuk.github.io/jszip/)) and splits it into entries:
 
 - A **title** is a short line that isn't a sentence, such as `4-Phenylbutan-2-one (1a)`. The label in brackets is shown separately.
 - Everything from a title up to the next title that contains NMR or HRMS data belongs to that compound, even when it's split across several paragraphs.
 - Procedures, yields and references are skipped.
 
 Each compound's structure comes from its name via OPSIN (in one request). When a name can't be read, it's flagged, and the H count is checked against the formula from the HRMS line instead. Structures drawn inside Word (ChemDraw objects) aren't read. Click a row for details, or **Open** to move the entry into the single-compound view.
+
+**Word file with comments.** After checking, **Download Word file with comments** returns your original document, otherwise unchanged, with a review comment on each problem:
+
+- Each comment is anchored to the exact text (an ion label, a signal, a value), or to the whole spectrum for problems like an integration sum.
+- A summary comment at the top counts the problems and lists the ones that recur across compounds, which are usually fixed with one find-and-replace.
+- Notes that are obviously fine (an unobserved OH/NH, a coupling partner reported as a multiplet) stay on the web page and aren't written into the document. "Include minor points" switches the remaining presentation notes on or off.
 
 ## Image and name recognition (structure server)
 
@@ -121,7 +127,8 @@ js/core/structure.js  RDKit.js: formula, symmetry classes, environments
 js/core/checks.js     all checks → findings
 js/ocsr.js            image upload, cropping, recognition, confirmation
 js/name.js            name extraction from the entry and OPSIN lookup
-js/batch.js           whole-SI mode: .docx reading, per-compound checks, CSV/HTML report
+js/batch.js           whole-SI mode: per-compound checks, CSV/HTML report, Word export
+js/core/docx.js       reading .docx paragraphs and writing anchored Word comments
 js/core/document.js   splitting a section into compound entries
 js/config.js          default structure-server address
 tests/                node:test suite
