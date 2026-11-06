@@ -172,3 +172,9 @@ test('two decimals used to resolve close peaks are fine', () => {
   const r = runChecks({ text: '13C NMR (101 MHz, CDCl3) δ 130.2, 129.36, 129.33, 125.8.' }, null);
   assert.ok(!has(r, 'info', /Mixed number of decimals/));
 });
+
+test('heading without data is reported clearly', () => {
+  const r = runChecks({ text: 'Compound (8e)\n1H NMR (400 MHz, CDCl3)\n13C NMR (101 MHz, CDCl3)' }, null);
+  assert.ok(has(r, 'warning', /¹H NMR heading has no data/));
+  assert.ok(has(r, 'warning', /¹³C NMR heading has no data/));
+});
